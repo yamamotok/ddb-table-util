@@ -36,7 +36,7 @@ export interface TableUtilOptions {
  * This is a DynamoDBDocumentClient wrapper which provides some additional utilities.
  * @see https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/modules/_aws_sdk_lib_dynamodb.html
  *
- * @param T item interface
+ * @param T item interface, which can be specified if items have a common basic structure.
  */
 export class TableUtil<T = ItemType> {
   static readonly defaultMarshalOptions: marshallOptions = {
