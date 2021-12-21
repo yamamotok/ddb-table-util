@@ -1,0 +1,27 @@
+services:
+  dynamodb:
+    image: amazon/dynamodb-local
+    environment:
+      PLACE_HOLDER: place_holder
+    ports:
+      - 8833:8000
+    entrypoint:
+      - java
+    command:
+      - -jar
+      - DynamoDBLocal.jar
+      - -inMemory
+      - -sharedDb
+
+  dynamodb-admin:
+    build:
+      context: .
+      dockerfile: dynamodb-admin.Dockerfile
+    restart: always
+    environment:
+      DYNAMO_ENDPOINT: http://dynamodb:8000
+      AWS_REGION: ap-northeast-1
+      AWS_ACCESS_KEY_ID: XXXXX
+      AWS_SECRET_ACCESS_KEY: XXXXX
+    ports:
+      - 8834:8001
