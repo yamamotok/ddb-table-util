@@ -1,4 +1,3 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { ulid } from 'ulid';
 
 import { TableUtil } from '../src/TableUtil';
@@ -9,26 +8,32 @@ interface MyItem {
   dateType?: string;
 }
 
-describe('test type hint for items', () => {
+describe('make sure if type hint works good with a custom item type', () => {
   let util: TableUtil<MyItem>;
 
   beforeAll(() => {
-    const lowLevelClient = new DynamoDBClient({
-      endpoint: ' http://localhost:8833',
-      region: 'us-east-1',
+    util = new TableUtil<MyItem>({
+      tableName: 'TEST',
+      partitionKeyName: 'pk',
+      dbConfig: {
+        endpoint: ' http://localhost:8833',
+        region: 'us-east-1',
+      },
+      serializer: (v) => ({ ...v, extra: 'well-processed' }),
     });
-    util = new TableUtil<MyItem>(lowLevelClient, { tableName: 'TEST', partitionKeyName: 'pk' });
   });
 
   it('should put an item', async () => {
     // should get type hint for pk, sk, and dataType.
-    await expect(
-      util.put({
-        pk: 'PK',
-        sk: 'SK#' + ulid(),
-        dateType: 'TestData',
-        another: 3,
-      })
-    ).resolves.toBeUndefined();
+    const item = {
+      pk: 'PK',
+      sk: 'SK#' + ulid(),
+      dateType: 'TestData',
+      another: 3,
+    };
+    await expect(util.put(item)).resolves.toBeUndefined();
+    const check = await util.get({ pk: item.pk, sk: item.sk }, { ConsistentRead: true });
+    expect(check).toBeTruthy();
+    expect(check?.extra).toBe('well-processed');
   });
 });
