@@ -1,4 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClientConfig } from '@aws-sdk/client-dynamodb/dist-types/DynamoDBClient';
 import {
   DeleteCommandInput,
   DynamoDBDocument,
@@ -23,20 +24,21 @@ type DeleteOptions = Omit<DeleteCommandInput, 'TableName'>;
 type ScanOptions = Omit<ScanCommandInput, 'TableName'>;
 type QueryOptions = Omit<QueryCommandInput, 'TableName'>;
 
-export type ItemPreprocessor = <T = unknown>(item: T) => ItemType;
-
-export interface TableUtilOptions {
+export interface TableUtilOptions<TT> {
   tableName: string;
   partitionKeyName: string;
+  dbClient?: DynamoDBClient;
+  dbConfig?: DynamoDBClientConfig;
   marshalOptions?: marshallOptions;
-  itemPreprocessor?: <T = ItemType>(item: T) => ItemType;
+  serializer?: <T = ItemType & TT>(item: T) => ItemType;
+  deserializer?: <T = ItemType & TT>(item: ItemType) => T;
 }
 
 /**
  * This is a DynamoDBDocumentClient wrapper which provides some additional utilities.
  * @see https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/modules/_aws_sdk_lib_dynamodb.html
  *
- * @param T item interface
+ * @param T item interface, which can be specified if items have a common basic structure.
  */
 export class TableUtil<T = ItemType> {
   static readonly defaultMarshalOptions: marshallOptions = {
@@ -45,36 +47,44 @@ export class TableUtil<T = ItemType> {
     convertClassInstanceToMap: true,
   } as const;
 
-  private readonly lowLevelClient: DynamoDBClient;
-  private _client?: DynamoDBDocument;
+  private readonly dbClient: DynamoDBClient;
+  private documentClient?: DynamoDBDocument;
   readonly tableName: string;
   readonly partitionKeyName: string;
   readonly marshalOptions: marshallOptions;
-  readonly itemPreprocessor?: ItemPreprocessor;
+  readonly serializer?: TableUtilOptions<T>['serializer'];
 
-  constructor(client: DynamoDBClient, options: TableUtilOptions) {
-    this.lowLevelClient = client;
+  constructor(options: TableUtilOptions<T>) {
+    if (options.dbClient) {
+      this.dbClient = options.dbClient;
+    } else if (options.dbConfig) {
+      this.dbClient = new DynamoDBClient(options.dbConfig);
+    } else {
+      throw new Error('Implementation error. Either DynamoDB client or config must be passed.');
+    }
     this.tableName = options.tableName;
     this.partitionKeyName = options.partitionKeyName;
     this.marshalOptions = { ...TableUtil.defaultMarshalOptions, ...options.marshalOptions };
-    this.itemPreprocessor = options.itemPreprocessor;
+    this.serializer = options.serializer;
   }
 
   get client(): DynamoDBDocument {
-    if (this._client) {
-      return this._client;
+    if (this.documentClient) {
+      return this.documentClient;
     }
-    return (this._client = DynamoDBDocument.from(this.lowLevelClient, {
+    return (this.documentClient = DynamoDBDocument.from(this.dbClient, {
       marshallOptions: this.marshalOptions,
     }));
   }
 
-  preprocessItem(item: ItemType): ItemType {
-    if (this.itemPreprocessor) {
-      return this.itemPreprocessor(item);
+  serialize(item: ItemType & T): ItemType {
+    if (this.serializer) {
+      return this.serializer(item);
     }
     return item;
   }
+
+  // TODO: implement deserialize
 
   /**
    * Put, simply.
@@ -83,7 +93,7 @@ export class TableUtil<T = ItemType> {
     await this.client.put({
       ...options,
       TableName: this.tableName,
-      Item: this.preprocessItem(item),
+      Item: this.serialize(item),
     });
   }
 
@@ -100,7 +110,7 @@ export class TableUtil<T = ItemType> {
       await this.client.put({
         ...options,
         TableName: this.tableName,
-        Item: this.preprocessItem(item),
+        Item: this.serialize(item),
         ConditionExpression: `attribute_not_exists(${this.partitionKeyName})`,
       });
     } catch (err) {
@@ -124,7 +134,7 @@ export class TableUtil<T = ItemType> {
       await this.client.put({
         ...options,
         TableName: this.tableName,
-        Item: this.preprocessItem(item),
+        Item: this.serialize(item),
         ConditionExpression: `attribute_exists(${this.partitionKeyName})`,
       });
     } catch (err) {
@@ -316,11 +326,11 @@ export class TableUtil<T = ItemType> {
   /**
    * Transactional {@link put}. See {@link Transaction} and check how to use.
    */
-  transactionalPut(item: ItemType, optionalParams?: PutOptions): PendingPut {
+  transactionalPut(item: ItemType & T, optionalParams?: PutOptions): PendingPut {
     const params: PutCommandInput = {
       ...optionalParams,
       TableName: this.tableName,
-      Item: this.preprocessItem(item),
+      Item: this.serialize(item),
     };
     return new PendingPut(params);
   }
@@ -329,7 +339,7 @@ export class TableUtil<T = ItemType> {
    * Transactional {@link putIfNotExists}. See {@link Transaction} and check how to use.
    */
   transactionalPutIfNotExists(
-    item: ItemType,
+    item: ItemType & T,
     options?: Omit<PutOptions, 'ConditionExpression'>
   ): PendingPut {
     const condition = `attribute_not_exists(${this.partitionKeyName})`;
@@ -337,7 +347,7 @@ export class TableUtil<T = ItemType> {
       ...options,
       ConditionExpression: condition,
       TableName: this.tableName,
-      Item: this.preprocessItem(item),
+      Item: this.serialize(item),
     };
     return new PendingPut(params);
   }
@@ -346,7 +356,7 @@ export class TableUtil<T = ItemType> {
    * Transactional {@link putIfExists}. See {@link Transaction} and check how to use.
    */
   transactionalPutIfExists(
-    item: ItemType,
+    item: ItemType & T,
     options?: Omit<PutOptions, 'ConditionExpression'>
   ): PendingPut {
     const condition = `attribute_exists(${this.partitionKeyName})`;
@@ -354,7 +364,7 @@ export class TableUtil<T = ItemType> {
       ...options,
       ConditionExpression: condition,
       TableName: this.tableName,
-      Item: this.preprocessItem(item),
+      Item: this.serialize(item),
     };
     return new PendingPut(params);
   }

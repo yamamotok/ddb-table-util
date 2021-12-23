@@ -15,7 +15,7 @@ describe('test main functionality', () => {
       endpoint: ' http://localhost:8833',
       region: 'us-east-1',
     });
-    util = new TableUtil(lowLevelClient, { tableName: 'TEST', partitionKeyName: 'pk' });
+    util = new TableUtil({ tableName: 'TEST', partitionKeyName: 'pk', dbClient: lowLevelClient });
   });
 
   beforeEach(() => {
