@@ -1,15 +1,20 @@
-import { DeleteCommandInput, PutCommandInput } from '@aws-sdk/lib-dynamodb';
+import { DeleteCommandInput, PutCommandInput, UpdateCommandInput } from '@aws-sdk/lib-dynamodb';
 
 import { TableUtil } from './TableUtil';
 
 export interface PendingAction {
-  action: 'Put' | 'Delete';
-  params: PutCommandInput | DeleteCommandInput;
+  action: 'Put' | 'Delete' | 'Update';
+  params: PutCommandInput | DeleteCommandInput | UpdateCommandInput;
 }
 
 export class PendingPut implements PendingAction {
   readonly action = 'Put';
   constructor(readonly params: PutCommandInput) {}
+}
+
+export class PendingUpdate implements PendingAction {
+  readonly action = 'Update';
+  constructor(readonly params: UpdateCommandInput) {}
 }
 
 export class PendingDelete implements PendingAction {
