@@ -1,6 +1,6 @@
 {
   "name": "ddb-table-util",
-  "version": "0.1.1",
+  "version": "0.8.0",
   "description": "DynamoDB document client wrapper which provides some additional utilities.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -23,29 +23,29 @@
   "author": "Keisuke Yamamoto",
   "license": "MIT",
   "devDependencies": {
-    "@aws-sdk/client-dynamodb": "^3.44.0",
-    "@aws-sdk/lib-dynamodb": "^3.44.0",
-    "@types/jest": "^27.0.3",
-    "@typescript-eslint/eslint-plugin": "^4.29.1",
-    "@typescript-eslint/parser": "^4.29.1",
-    "eslint": "^7.32.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-import-resolver-typescript": "^2.4.0",
-    "eslint-plugin-import": "^2.24.0",
-    "eslint-plugin-jest": "^24.4.0",
-    "eslint-plugin-prettier": "^3.4.0",
-    "eslint-plugin-simple-import-sort": "^7.0.0",
-    "eslint-plugin-unused-imports": "^1.1.5",
-    "jest": "^27.4.5",
+    "@aws-sdk/client-dynamodb": "3.353.0",
+    "@aws-sdk/lib-dynamodb": "3.353.0",
+    "@types/jest": "29.5.2",
+    "@typescript-eslint/eslint-plugin": "5.59.8",
+    "@typescript-eslint/parser": "5.59.8",
+    "eslint": "8.41.0",
+    "eslint-config-prettier": "8.8.0",
+    "eslint-import-resolver-typescript": "3.5.5",
+    "eslint-plugin-import": "2.27.5",
+    "eslint-plugin-jest": "27.2.1",
+    "eslint-plugin-prettier": "4.2.1",
+    "eslint-plugin-simple-import-sort": "10.0.0",
+    "eslint-plugin-unused-imports": "2.0.0",
+    "jest": "29.5.0",
     "npm-run-all": "^4.1.5",
-    "prettier": "^2.4.1",
-    "rimraf": "^3.0.2",
-    "ts-jest": "^27.1.1",
-    "typescript": "4.5.4",
-    "ulid": "^2.3.0"
+    "prettier": "^2.8.8",
+    "rimraf": "^5.0.1",
+    "ts-jest": "29.1.0",
+    "typescript": "4.7.4",
+    "ulid": "2.3.0"
   },
   "peerDependencies": {
-    "@aws-sdk/client-dynamodb": "^3.44.0",
-    "@aws-sdk/lib-dynamodb": "^3.44.0"
+    "@aws-sdk/client-dynamodb": "^3.353.0",
+    "@aws-sdk/lib-dynamodb": "^3.353.0"
   }
 }

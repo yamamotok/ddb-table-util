@@ -77,13 +77,11 @@ describe('test main functionality', () => {
           ExpressionAttributeValues: { ':current_extra': '?' },
         }
       );
-      await expect(updatePromise).rejects.toThrowError();
+      await expect(updatePromise).rejects.toThrow();
     });
 
     it('should fail to update when the target is missing', async () => {
-      await expect(
-        util.update({ pk: 'Hello' }, { sk: 'World', extra: '!' })
-      ).rejects.toThrowError();
+      await expect(util.update({ pk: 'Hello' }, { sk: 'World', extra: '!' })).rejects.toThrow();
     });
   });
 
@@ -136,7 +134,7 @@ describe('test main functionality', () => {
       await util.put(input);
       await sleep();
       const pending = util.transactionalPutIfNotExists(input);
-      await expect(Transaction.begin(util, pending).commit()).rejects.toThrowError();
+      await expect(Transaction.begin(util, pending).commit()).rejects.toThrow();
     });
 
     it('should put some items conditionally (put if exists) in transaction', async () => {
@@ -148,7 +146,7 @@ describe('test main functionality', () => {
 
     it('should fail to put some items because of condition (put if exists) check failure', async () => {
       const pending = util.transactionalPutIfExists(input);
-      await expect(Transaction.begin(util, pending).commit()).rejects.toThrowError();
+      await expect(Transaction.begin(util, pending).commit()).rejects.toThrow();
     });
 
     it('should delete some items in transaction', async () => {
