@@ -167,7 +167,7 @@ export class TableUtil<T = ItemType> {
    */
   async update(
     key: Partial<T>,
-    attributes: ItemType & T,
+    attributes: ItemType & Partial<T>,
     options?: UpdateOptions
   ): Promise<ItemType & T> {
     const condition = `attribute_exists(${this.partitionKeyName})`;
